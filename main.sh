@@ -57,7 +57,7 @@ for path in "${paths[@]}" ; do
         # Path to a regular file (`-f`) or a symbolic link (`-h`)
         echo "$path"  # ../ITC-Sheets/REGEX/README.md
 
-        # Check if the file path ends with .md
+        # Check if the file path ends with '.md' (REGEX)
         if [[ ! "$path" =~ .*\.md$ ]]; then
             # Printing to STDERR
             echo >&2 "ERR: The file $path is not a Markdown file, it doesn't have the '.md' extension."
@@ -82,8 +82,44 @@ done
 
 # Print the Markdown files found
 echo "Markdown files found:"
-for file in "${MarkDown_files[@]}" ; do
-    echo "$file"
+for md_file in "${MarkDown_files[@]}" ; do
+    
+    # 🖼️ REGEX for MarkDown images: ![alt text](path)
+    rgx_md_img='\!\[.*\]\([^)]*\)'
+
+    # 🔗 REGEX for MarkDown links: [text](path)
+    rgx_md_link_1='[^\!]\[.*\]\([^)]*\)'
+    rgx_md_link_2='^\[.*\]\([^)]*\)'
+
+    # 🌐 REGEX for URLs in MarkDown: <https://google.com>, "https://google.com", 'http://google.com'
+    rgx_md_url_1='<https?://[^ ]*>'
+    rgx_md_url_2='"https?://[^ ]*"'
+    rgx_md_url_3="'https?://[^ ]*'"
+    
+    # 🖼️ REGEX for HTML images (`img` tag)
+    rgx_html_img_1='<img.*src[ \t]*=[ \t]*".*".*>'
+    rgx_html_img_2="<img.*src[ \t]*=[ \t]*'.*'.*>"
+
+    # 🔗 REGEX for HTML links (`href` tag)
+    rgx_html_href_1='href[ \t]*=[ \t]*".*"'
+    rgx_html_href_2="href[ \t]*=[ \t]*'.*'"
+
+
+
+
+    # Problem: how to print each matched pattern on a single line    
+    rg --vimgrep --only-matching "$rgx_md_img" "$md_file"
+
+    rg --vimgrep --only-matching  -e "$rgx_md_link_1" -e "$rgx_md_link_2"  "$md_file"
+
+    rg --vimgrep --only-matching -e "$rgx_md_url_1"  -e "$rgx_md_url_2"  -e "$rgx_md_url_3"  "$md_file"
+
+    rg --vimgrep --only-matching -e "$rgx_html_img_1" -e "$rgx_html_img_2"  "$md_file"
+
+    rg --vimgrep --only-matching -e "$rgx_html_href_1" -e "$rgx_html_href_2"  "$md_file"
+
+
+
 done
 
 exit $exit_code
