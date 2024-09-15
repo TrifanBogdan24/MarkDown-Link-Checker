@@ -3,8 +3,8 @@ import typing
 from enum import Enum
 import sys
 import os
-import re
-
+import re        # regular expressions
+import requests  # for testing HTTP/HTTPS connections
 
 
 exit_code=0
@@ -19,8 +19,8 @@ regular_expressions = {
     'rgx_md_img': r'\!\[.*\]\([^)]*\)',
 
     # 🔗 REGEX for MarkDown links: [text](path)
-    'rgx_md_link_pattern_1': r'[^\!]\[.*\]\([^)]*\)',
-    'rgx_md_link_pattern_2': r'^\[.*\]\([^)]*\)',
+    'rgx_md_link_pattern_1': r'[^\!]\[.*\]\([^#][^)]*\)',
+    'rgx_md_link_pattern_2': r'^\[.*\]\([^#][^)]*\)',
 
     # 🌐 REGEX for URLs in MarkDown: <https://google.com>, "https://google.com", 'http://google.com'
     'rgx_md_url_pattern_1': r'<https?://[^ ]*>',
@@ -32,8 +32,8 @@ regular_expressions = {
     'rgx_html_img_pattern_2': r"<img.*src[ \t]*=[ \t]*'.*'.*>",
 
     # 🔗 REGEX for HTML links (`href` tag)
-    'rgx_html_href_pattern_1': r'href[ \t]*=[ \t]*".*"',
-    'rgx_html_href_pattern_2': r"href[ \t]*=[ \t]*'.*'"
+    'rgx_html_href_url_pattern_1': r'href[ \t]*=[ \t]*"https?://[^ ]*"',
+    'rgx_html_href_url_pattern_2': r"href[ \t]*=[ \t]*'https?://[^ ]*'"
 }
 
 
@@ -85,16 +85,6 @@ class colors:
         purple = '\033[45m'
         cyan = '\033[46m'
         lightgrey = '\033[47m'
-
-
-class Output:
-    def __init__(self, is_broken_link, type_of_link, file_path, line, column, pattern):
-        self.is_broken_link = is_broken_link
-        self.type_of_link = type_of_link
-        self.file_path = file_path
-        self.line = line
-        self.column = column
-        self.pattern = pattern
 
 
 
@@ -172,13 +162,301 @@ def iterate_cmd_args_and_get_md_files() -> list[str]:
     return md_file_paths
 
 
+def match_rgx_md_img_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_md_img']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🖼️  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+                # matches.append(f"{file_path}:{line_num}:{start_column}:{pattern}")
+    
+
+
+
+
+def match_rgx_md_link_pattern_1_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_md_link_pattern_1']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🔗  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+def match_rgx_md_link_pattern_2_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_md_link_pattern_2']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🔗  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+
+def match_rgx_md_url_pattern_1_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_md_url_pattern_1']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🌐  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+
+
+
+def match_rgx_md_url_pattern_2_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_md_url_pattern_2']
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🌐  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+
+
+
+
+
+def match_rgx_md_url_pattern_3_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_md_url_pattern_3']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🌐  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+def match_rgx_html_img_pattern_1_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_html_img_pattern_1']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🖼️  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+
+def match_rgx_html_img_pattern_2_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_html_img_pattern_2']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🖼️  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+def match_rgx_html_href_url_pattern_1_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_html_href_url_pattern_1']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🔗  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
+
+def match_rgx_html_href_url_pattern_2_against_file(file_path):
+    """
+    Returned format:
+    file_path:line:column:pattern
+    """
+    rgx = regular_expressions['rgx_html_href_url_pattern_2']
+    
+
+
+    # Open the file and read line by line
+    with open(file_path, 'r') as file:
+        for line_num, line in enumerate(file, start=1):
+            # Find all matches of the regex in the current line
+            for match in re.finditer(rgx, line):
+                start_column = match.start() + 1
+                pattern = match.group(0)
+                print("🔗  ", end='')
+                print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
+                print(f"{colors.fg.yellow}{pattern}{colors.reset}")
+    
+    
+
+
 def main() -> None:
     md_file_paths = iterate_cmd_args_and_get_md_files()
     
 
+
     print("MarkDown files:")
     [print(colors.fg.purple, f"{file}", colors.reset) for file in md_file_paths]
 
+    
+    for path in md_file_paths:
+        print(f"MarkDown images in {path}:")
+        match_rgx_md_img_against_file(path)
+        print()
+        print(f"MarkDown links in {path}:") 
+        match_rgx_md_link_pattern_1_against_file(path)
+        match_rgx_md_link_pattern_2_against_file(path)
+        print()
+        print(f"MarkDown URLs in {path}:") 
+        match_rgx_md_url_pattern_1_against_file(path)
+        match_rgx_md_url_pattern_2_against_file(path)
+        match_rgx_md_url_pattern_3_against_file(path)
+        print()
+        print(f"HTML images in {path}:") 
+        match_rgx_html_img_pattern_1_against_file(path)
+        match_rgx_html_img_pattern_2_against_file(path)
+        print()
+        print(f"HTML 'href' URLs in {path}:") 
+        match_rgx_html_href_url_pattern_1_against_file(path)
+        match_rgx_html_href_url_pattern_2_against_file(path)
+        print()
 
 if __name__ == "__main__":
     main()
