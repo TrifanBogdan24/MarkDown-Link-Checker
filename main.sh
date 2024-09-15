@@ -107,7 +107,7 @@ for md_file in "${MarkDown_files[@]}" ; do
 
 
 
-    # Problem: how to print each matched pattern on a single line    
+    # Problem: how to print each matched pattern on a single lines    
     rg --vimgrep --only-matching "$rgx_md_img" "$md_file"
 
     rg --vimgrep --only-matching  -e "$rgx_md_link_1" -e "$rgx_md_link_2"  "$md_file"
@@ -117,7 +117,6 @@ for md_file in "${MarkDown_files[@]}" ; do
     rg --vimgrep --only-matching -e "$rgx_html_img_1" -e "$rgx_html_img_2"  "$md_file"
 
     rg --vimgrep --only-matching -e "$rgx_html_href_1" -e "$rgx_html_href_2"  "$md_file"
-
 
 
 done
