@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import typing
+from enum import Enum
 import sys
 import os
 import re
@@ -7,6 +8,7 @@ import re
 
 
 exit_code=0
+
 
 
 regular_expressions = {
@@ -33,6 +35,69 @@ regular_expressions = {
     'rgx_html_href_pattern_1': r'href[ \t]*=[ \t]*".*"',
     'rgx_html_href_pattern_2': r"href[ \t]*=[ \t]*'.*'"
 }
+
+
+
+
+class colors:
+
+
+  '''
+  Code from: https://www.geeksforgeeks.org/print-colors-python-terminal/
+  
+  Colors class:reset all colors with colors.reset; two
+  sub classes fg for foreground
+  and bg for background; use as colors.subclass.colorname.
+  i.e. colors.fg.red or colors.bg.greenalso, the generic bold, disable,
+  underline, reverse, strike through,
+  and invisible work with the main class i.e. colors.bold'''
+  reset = '\033[0m'
+  bold = '\033[01m'
+  disable = '\033[02m'
+  underline = '\033[04m'
+  reverse = '\033[07m'
+  strikethrough = '\033[09m'
+  invisible = '\033[08m'
+
+  class fg:
+    black = '\033[30m'
+    red = '\033[31m'
+    green = '\033[32m'
+    orange = '\033[33m'
+    blue = '\033[34m'
+    purple = '\033[35m'
+    cyan = '\033[36m'
+    lightgrey = '\033[37m'
+    darkgrey = '\033[90m'
+    lightred = '\033[91m'
+    lightgreen = '\033[92m'
+    yellow = '\033[93m'
+    lightblue = '\033[94m'
+    pink = '\033[95m'
+    lightcyan = '\033[96m'
+
+    class bg:
+        black = '\033[40m'
+        red = '\033[41m'
+        green = '\033[42m'
+        orange = '\033[43m'
+        blue = '\033[44m'
+        purple = '\033[45m'
+        cyan = '\033[46m'
+        lightgrey = '\033[47m'
+
+
+class Output:
+    def __init__(self, is_broken_link, type_of_link, file_path, line, column, pattern):
+        self.is_broken_link = is_broken_link
+        self.type_of_link = type_of_link
+        self.file_path = file_path
+        self.line = line
+        self.column = column
+        self.pattern = pattern
+
+
+
 
 
 
@@ -83,7 +148,6 @@ def iterate_cmd_args_and_get_md_files() -> list[str]:
 
     
     for path in paths:
-        print(f"{path}")
 
         if os.path.isfile(path):
             # Regular file
@@ -101,9 +165,10 @@ def iterate_cmd_args_and_get_md_files() -> list[str]:
             # Directory
             scan_directory_for_md_files(path, md_file_paths)
         else:
-            print(f"ERROR: Invalid argument. {path} is neither a regular file or a directory.", file=sys.stderr)
+            print(f"ERROR: Invalid argument.", file=sys.stderr)
+            print(f"      {path} is neither a regular file or a directory.", file=sys.stderr)
             exit_code=255
-
+            continue
     return md_file_paths
 
 
@@ -112,7 +177,7 @@ def main() -> None:
     
 
     print("MarkDown files:")
-    [print(file) for file in md_file_paths]
+    [print(colors.fg.purple, f"{file}", colors.reset) for file in md_file_paths]
 
 
 if __name__ == "__main__":
