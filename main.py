@@ -17,6 +17,9 @@ regular_expressions = {
 
     # 🖼️ REGEX for MarkDown images: ![alt text](path)
     'rgx_md_img': r'\!\[.*\]\([^)]*\)',
+    'rgx_alt_txt_for_md_img': r'\!\[.*\]',
+    'rgx_md_img_actual_link': r'\([^)]*\)',
+
 
     # 🔗 REGEX for MarkDown links: [text](path)
     'rgx_md_link_pattern_1': r'[^\!]\[.*\]\([^#][^)]*\)',
@@ -33,7 +36,10 @@ regular_expressions = {
 
     # 🔗 REGEX for HTML links (`href` tag)
     'rgx_html_href_url_pattern_1': r'href[ \t]*=[ \t]*"https?://[^ ]*"',
-    'rgx_html_href_url_pattern_2': r"href[ \t]*=[ \t]*'https?://[^ ]*'"
+    'rgx_html_href_url_pattern_2': r"href[ \t]*=[ \t]*'https?://[^ ]*'",
+
+    # 🌐 REGEX for HTTP URLs
+    'rgx_http': r'https?://[^ ]*'
 }
 
 
@@ -167,23 +173,38 @@ def match_rgx_md_img_against_file(file_path):
     Returned format:
     file_path:line:column:pattern
     """
-    rgx = regular_expressions['rgx_md_img']
-    
 
+    rgx_md_img = regular_expressions['rgx_md_img']
+    rgx_alt_txt_for_md_img = regular_expressions['rgx_alt_txt_for_md_img']
+    rgx_md_img_actual_link = regular_expressions['rgx_md_img_actual_link']
+
+    # pattern: ![...](....)
 
     # Open the file and read line by line
     with open(file_path, 'r') as file:
         for line_num, line in enumerate(file, start=1):
             # Find all matches of the regex in the current line
-            for match in re.finditer(rgx, line):
+            for match in re.finditer(rgx_md_img, line):
                 start_column = match.start() + 1
                 pattern = match.group(0)
+
+                # Find the alternative text using 'rgx_alt_txt_for_md_img' and remove this string from pattern into another variable, called actual link
+                alt_text_match = re.search(rgx_alt_txt_for_md_img, pattern)
+                alt_text = alt_text_match.group(0) if alt_text_match else "No alt text found"
+
+                # # Extract the actual link (everything inside the parentheses)
+                actual_link = re.search(rgx_md_img_actual_link, pattern)
+                actual_link = actual_link.group(0) if actual_link else "No link found"
+
+
+
+                print(f"Actual link = {actual_link}\n")
+
                 print("🖼️  ", end='')
                 print(f"{colors.fg.purple}{file_path}{colors.fg.cyan}:", end='')
                 print(f"{colors.fg.green}{line_num}{colors.fg.cyan}:", end='')
                 print(f"{colors.fg.blue}{start_column}{colors.fg.cyan}:", end='')
                 print(f"{colors.fg.yellow}{pattern}{colors.reset}")
-                # matches.append(f"{file_path}:{line_num}:{start_column}:{pattern}")
     
 
 
